@@ -1,4 +1,4 @@
-package com.application.project.dao.impl;
+package com.application.project.repositories;
 
 import com.application.project.TestDataUtil;
 import com.application.project.domain.Author;
@@ -18,26 +18,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class BookDaoImplIntegrationTests {
+public class BookRepositoryIntegrationTests {
 
-    private BookDaoImpl underTest;
+    private BookRepository underTest;
 
-    private AuthorDaoImpl authorDao;
 
     @Autowired
-    public BookDaoImplIntegrationTests(BookDaoImpl underTest, AuthorDaoImpl authorDao) {
+    public BookRepositoryIntegrationTests(BookRepository underTest) {
         this.underTest = underTest;
-        this.authorDao = authorDao;
     }
 
     @Test
     public void testThatBookCanBeCreatedAndRecalled() {
         Author author = TestDataUtil.createTestAuthorA();
-        authorDao.create(author);
-        Book book = TestDataUtil.createTestBookA();
-        book.setAuthorId(author.getId());
-        underTest.create(book);
-        Optional<Book> result = underTest.findOne(book.getIsbn());
+        Book book = TestDataUtil.createTestBookA(author);
+        underTest.save(book);
+        Optional<Book> result = underTest.findById(book.getIsbn());
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(book);
     }
@@ -45,21 +41,17 @@ public class BookDaoImplIntegrationTests {
     @Test
     public void testThatMultiplyBooksCanBeCreatedAndRecalled() {
         Author author = TestDataUtil.createTestAuthorA();
-        authorDao.create(author);
 
-        Book bookA = TestDataUtil.createTestBookA();
-        bookA.setAuthorId(author.getId());
-        underTest.create(bookA);
+        Book bookA = TestDataUtil.createTestBookA(author);
+        underTest.save(bookA);
 
-        Book bookB = TestDataUtil.createTestBookB();
-        bookB.setAuthorId(author.getId());
-        underTest.create(bookB);
+        Book bookB = TestDataUtil.createTestBookB(author);
+        underTest.save(bookB);
 
-        Book bookC = TestDataUtil.createTestBookC();
-        bookC.setAuthorId(author.getId());
-        underTest.create(bookC);
+        Book bookC = TestDataUtil.createTestBookC(author);
+        underTest.save(bookC);
 
-        List<Book> result = underTest.find();
+        Iterable<Book> result = underTest.findAll();
         assertThat(result)
                 .hasSize(3)
                 .containsExactly(bookA, bookB, bookC);
@@ -68,15 +60,14 @@ public class BookDaoImplIntegrationTests {
     @Test
     public void testThatBookCanBeUpdated() {
         Author author = TestDataUtil.createTestAuthorA();
-        authorDao.create(author);
 
-        Book book = TestDataUtil.createTestBookA();
-        book.setAuthorId(author.getId());
-        underTest.create(book);
+        Book book = TestDataUtil.createTestBookA(author);
+        underTest.save(book);
 
         book.setTitle("UPDATED");
-        underTest.update(book.getIsbn(), book);
-        Optional<Book> result = underTest.findOne(book.getIsbn());
+        underTest.save(book);
+
+        Optional<Book> result = underTest.findById(book.getIsbn());
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(book);
     }
@@ -84,14 +75,12 @@ public class BookDaoImplIntegrationTests {
     @Test
     public void testThatBookCanBeDeleted() {
         Author author = TestDataUtil.createTestAuthorA();
-        authorDao.create(author);
 
-        Book book = TestDataUtil.createTestBookA();
-        book.setAuthorId(author.getId());
-        underTest.create(book);
+        Book book = TestDataUtil.createTestBookA(author);
+        underTest.save(book);
 
-        underTest.delete(book.getIsbn());
-        Optional<Book> result = underTest.findOne(book.getIsbn());
+        underTest.deleteById(book.getIsbn());
+        Optional<Book> result = underTest.findById(book.getIsbn());
         assertThat(result).isEmpty();
     }
 }
